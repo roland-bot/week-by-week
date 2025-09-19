@@ -74,29 +74,29 @@
       } else {
       switch (weekNumber) {
         case 1:
-          return "It is" + dayName + " of Week 1.";
+          return "" + dayName + " of Week 1.";
         case 2:
-          return "It is " + dayName + " of Week 2.";
+          return "" + dayName + " of Week 2.";
         case 3:
-          return "It is " + dayName + " of Week 3.";
+          return "" + dayName + " of Week 3.";
         case 4:
-          return "It is " + dayName + " of Week 4.";
+          return "" + dayName + " of Week 4.";
         case 5:
-          return "It is " + dayName + " of Week 5.";
+          return "" + dayName + " of Week 5.";
         case 6:
-          return "It is " + dayName + " of Week 6.";
+          return "" + dayName + " of Week 6.";
         case 7:
-          return "It is " + dayName + " of Week 7."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
+          return "" + dayName + " of Week 7."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
         case 8:
-          return "It is " + dayName + " of Week 8."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
+          return "" + dayName + " of Week 8."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
         case 9:
-          return "It is " + dayName + " of the Mid Semester break."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks  
+          return "" + dayName + " of the Mid Semester break."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks  
         case 10:
-          return "It is " + dayName + " of Week 9."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
+          return "" + dayName + " of Week 9."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
         case 11:
-          return "It is " + dayName + " of Week 10.";
+          return "" + dayName + " of Week 10.";
         case 12:
-          return "It is " + dayName + " of Week 11.";
+          return "" + dayName + " of Week 11.";
         case 13:
           return "It is " + dayName + " of Week 12.";
         case 14:
@@ -118,7 +118,7 @@
     const dayName = getDayName(dayNumber);
     const weekNumber = getWeekNumber(currentDate);
     const weekName = getWeekName(weekNumber);
-    document.getElementById("week-display").innerHTML = "Where are we in the semester? " + weekName; // [N.B: if you want to change the text preceding the counter, do so here]
+    document.getElementById("week-display").innerHTML = "Semester 1:" + weekName; // [N.B: if you want to change the text preceding the counter, do so here]
   </script>
 </body>
 </html>
