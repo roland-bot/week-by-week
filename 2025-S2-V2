@@ -71,39 +71,39 @@
       } else {
       switch (weekNumber) {
         case 1:
-          return "Semester 2: It is " + dayName + " of Week 1.";
+          return "It is" + dayName + " of Week 1.";
         case 2:
-          return "Semester 2: It is " + dayName + " of Week 2.";
+          return "It is " + dayName + " of Week 2.";
         case 3:
-          return "Semester 2: It is " + dayName + " of Week 3.";
+          return "It is " + dayName + " of Week 3.";
         case 4:
-          return "Semester 2: It is " + dayName + " of Week 4.";
+          return "It is " + dayName + " of Week 4.";
         case 5:
-          return "Semester 2: It is " + dayName + " of Week 5.";
+          return "It is " + dayName + " of Week 5.";
         case 6:
-          return "Semester 2: It is " + dayName + " of Week 6.";
+          return "It is " + dayName + " of Week 6.";
         case 7:
-          return "Semester 2: It is " + dayName + " of Week 7."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
+          return "It is " + dayName + " of Week 7."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
         case 8:
-          return "Semester 2: It is " + dayName + " of Week 8."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
+          return "It is " + dayName + " of Week 8."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
         case 9:
-          return "Semester 2: It is " + dayName + " of the Mid Semester break."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks  
+          return "It is " + dayName + " of the Mid Semester break."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks  
         case 10:
-          return "Semester 2: It is " + dayName + " of Week 9."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
+          return "It is " + dayName + " of Week 9."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
         case 11:
-          return "Semester 2: It is " + dayName + " of Week 10.";
+          return "It is " + dayName + " of Week 10.";
         case 12:
-          return "Semester 2: It is " + dayName + " of Week 11.";
+          return "It is " + dayName + " of Week 11.";
         case 13:
-          return "Semester 2: It is " + dayName + " of Week 12.";
+          return "It is " + dayName + " of Week 12.";
         case 14:
-          return "Semester 2: It is " + dayName + " of Week 13.";
+          return "It is " + dayName + " of Week 13.";
         case 15:
-          return "Semester 2: It is " + dayName + " of STUVAC.";
+          return "It is " + dayName + " of STUVAC.";
         case 16:
-          return "Semester 2: It is " + dayName + " of Week One of the Exam Period.";
+          return "It is " + dayName + " of Week One of the Exam Period.";
         case 17:
-          return "Semester 2: It is " + dayName + " of Week Two of the Exam Period.";
+          return "It is " + dayName + " of Week Two of the Exam Period.";
         }
       }
     };
