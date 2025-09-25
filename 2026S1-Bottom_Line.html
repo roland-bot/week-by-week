@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Semester Week</title>
+</head>
+<body>
+
+
+
+  
+ 
+  
+
+
+<p style="border-bottom: 2px dotted #28426a;
+         padding: 10px;  
+         margin-top: 0px; 
+         margin-bottom: 0px;
+         font-size: 14pt; 
+         color: rgb(45, 59, 69); 
+         text-align: center; 
+         font-family: 'Century Gothic', Calibri, Helvetica, Arial, sans-serif; 
+         overflow: hidden;
+         font-weight: bold;" 
+   id="week-display">
+  Where are we in the semester? Semester 2 hasn't started yet.
+</p>
+  <script> // [N.B: if you want to change how the box and text looks in terms of styling, do so in the line above]
+
+    const semesterStartDate = new Date("2025-08-04T00:00:00+10:00"); // enter the start date of the Semester in AEDT or AEST
+
+    const weekStartDates = [
+      new Date("2025-08-04T00:00:00+10:00"), // enter the start date of Week One
+      new Date("2025-08-11T00:00:00+10:00"), // enter the start date of Week Two
+      new Date("2025-08-18T00:00:00+10:00"), // enter the start date of Week Three
+      new Date("2025-08-25T00:00:00+10:00"), // enter the start date of Week Four
+      new Date("2025-09-01T00:00:00+10:00"), // enter the start date of Week Five
+      new Date("2025-09-08T00:00:00+10:00"), // enter the start date of Week Six
+      new Date("2025-09-15T00:00:00+10:00"), // enter the start date of Week Seven [N.B: the Semester Recess and/or AEDT/AEST may be here too]
+      new Date("2025-09-22T00:00:00+10:00"), // enter the start date of Week Eight [N.B: the Semester Recess and/or AEDT/AEST may be here too]
+      new Date("2025-09-29T00:00:00+10:00"), // enter the start date of the Semester Recess [N.B: the Semester Recess and/or AEDT/AEST may be here too]
+      new Date("2025-10-06T00:00:00+11:00"), // enter the start date of Week Nine [N.B: the Semester Recess and/or AEDT/AEST may be here too]
+      new Date("2025-10-13T00:00:00+11:00"), // enter the start date of Week Ten
+      new Date("2025-10-20T00:00:00+11:00"), // enter the start date of Week Eleven
+      new Date("2025-10-27T00:00:00+11:00"), // enter the start date of Week Twelve
+      new Date("2025-11-03T00:00:00+11:00"), // enter the start date of Week Thirteen
+      new Date("2025-11-10T00:00:00+11:00"), // enter the start date of STUVAC
+      new Date("2025-11-17T00:00:00+11:00"), // enter the start of Week One of the Exam Period
+      new Date("2025-11-24T00:00:00+11:00"), // enter the start of Week Two of the Exam Period
+      new Date("2025-12-01T00:00:00+11:00"), // enter the start of the following week (i.e. end of the Semester)
+    ];
+
+    const getWeekNumber = (date) => {
+      let weekNumber;
+      const time = date.getTime() - semesterStartDate.getTime();
+      if(date < weekStartDates[0]) weekNumber = -1; 
+      for(let i=0; i<18; i++){
+        if(date >= weekStartDates[i] && date < weekStartDates[i+1]) {
+          weekNumber = i+1;
+        }
+      } 
+      if(date > weekStartDates[17]) weekNumber = 18;
+      return weekNumber;
+    };
+
+    const getDayName = (dayNumber) => { // [N.B: in HTML format, the first day in the array is Sunday, but the counter will still name it correctly]
+      switch (dayNumber) {
+        case 0:
+          return "Sunday";
+        case 1:
+          return "Monday";
+        case 2:
+          return "Tuesday";
+        case 3:
+          return "Wednesday";
+        case 4:
+          return "Thursday";
+        case 5:
+          return "Friday";
+        case 6:
+          return "Saturday";
+      }
+    }
+
+    const getWeekName = (weekNumber) => { 
+      if (weekNumber < 0) {
+        return "Semester 2 hasn't started yet.";
+      } else if (weekNumber >= 18) {
+        return "Semester 2 has finished.";
+      } else {
+      switch (weekNumber) {
+        case 1:
+          return "" + dayName + " of Week 1.";
+        case 2:
+          return "" + dayName + " of Week 2.";
+        case 3:
+          return "" + dayName + " of Week 3.";
+        case 4:
+          return "" + dayName + " of Week 4.";
+        case 5:
+          return "" + dayName + " of Week 5.";
+        case 6:
+          return "" + dayName + " of Week 6.";
+        case 7:
+          return "" + dayName + " of Week 7."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
+        case 8:
+          return "" + dayName + " of Week 8."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
+        case 9:
+          return "" + dayName + " of the Mid Semester break."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks  
+        case 10:
+          return "" + dayName + " of Week 9."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
+        case 11:
+          return "" + dayName + " of Week 10.";
+        case 12:
+          return "" + dayName + " of Week 11.";
+        case 13:
+          return "It is " + dayName + " of Week 12.";
+        case 14:
+          return "It is " + dayName + " of Week 13.";
+        case 15:
+          return "It is " + dayName + " of STUVAC.";
+        case 16:
+          return "It is " + dayName + " of Week One of the Exam Period.";
+        case 17:
+          return "It is " + dayName + " of Week Two of the Exam Period.";
+        }
+      }
+    };
+    
+    const options = {timeZone: "Australia/Sydney"};
+    const sydneyDate = new Intl.DateTimeFormat("en-US", options).format(new Date());
+    const currentDate = new Date(sydneyDate);
+    const dayNumber = currentDate.getDay();
+    const dayName = getDayName(dayNumber);
+    const weekNumber = getWeekNumber(currentDate);
+    const weekName = getWeekName(weekNumber);
+    document.getElementById("week-display").innerHTML = "It is Semester 1: " + weekName; // [N.B: if you want to change the text preceding the counter, do so here]
+  </script>
+</body>
+</html>
