@@ -22,7 +22,7 @@
          overflow: hidden;
          font-weight: bold;" 
    id="week-display">
-  Where are we in the semester? Semester 2 hasn't started yet.
+  Where are we in the semester? The semester hasn't started yet.
 </p>
   <script> // [N.B: if you want to change how the box and text looks in terms of styling, do so in the line above]
 
@@ -83,9 +83,9 @@
 
     const getWeekName = (weekNumber) => { 
       if (weekNumber < 0) {
-        return "Semester 2 hasn't started yet.";
+        return "The Semester hasn't started yet.";
       } else if (weekNumber >= 18) {
-        return "Semester 2 has finished.";
+        return "The Semester has finished.";
       } else {
       switch (weekNumber) {
         case 1:
