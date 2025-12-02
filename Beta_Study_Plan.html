@@ -1,0 +1,53 @@
+
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <title>Semester Week</title>
+  <style>
+    #week-display {
+      border: 2px dotted #28426a;
+      padding: 10px;
+      margin: 0;
+      font-size: 14pt;
+      color: rgb(45, 59, 69);
+      text-align: center;
+      font-family: "Century Gothic", Calibri, Helvetica, Arial, sans-serif;
+      font-weight: bold;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <p id="week-display">Where are we in the semester? The semester hasn't started yet.</p>
+
+  <script>
+    // --------------------------
+    // Utility: Australia/Sydney date handling
+    // --------------------------
+    function nowInSydney() {
+      const s = new Date().toLocaleString('en-AU', { timeZone: 'Australia/Sydney' });
+      return new Date(s);
+    }
+    function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0); } // midday avoids DST edges
+    function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return startOfDay(x); }
+    function isSameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+    function nextMondayOnOrAfter(year, monthIndex, day) {
+      let d = startOfDay(new Date(year, monthIndex, day));
+      while (d.getDay() !== 1) d = addDays(d, 1); // 1 = Monday
+      return d;
+    }
+    function lastMondayInSeptember(year) {
+      let d = startOfDay(new Date(year, 8, 30)); // 30 Sep
+      while (d.getDay() !== 1) d = addDays(d, -1);
+      return d;
+    }
+
+    // --------------------------
+    // Easter Monday (Anonymous Gregorian algorithm)
+    // --------------------------
+    function easterSunday(year) {
+      const a = year % 19;
+      const b = Math.floor(year / 100);
+      const c = year % 100;
+      const d = Math.floor(b / 4);
