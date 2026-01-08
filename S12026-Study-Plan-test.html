@@ -32,7 +32,7 @@
   const semesterConfigs = {
     1: {
       name: "Semester 1",
-      startDate: "2026-02-23",   // Update to official start date
+      startDate: "2026-02-23",   // Update to official start date if needed
       teachingWeeks: 13,
       breakAfterWeek: 6,
       breakLengthWeeks: 1,
@@ -40,7 +40,7 @@
     },
     2: {
       name: "Semester 2",
-      startDate: "2026-08-03",   // Update to official start date
+      startDate: "2026-08-03",   // UPDATED: Semester 2 starts on 3 August 2026
       teachingWeeks: 13,
       breakAfterWeek: 6,
       breakLengthWeeks: 1,
@@ -69,149 +69,8 @@
     const { startDate, teachingWeeks, breakAfterWeek, breakLengthWeeks, preWeeks } = config;
     const boundaries = [];
 
-    // Pre-weeks
+    // Pre-weeks (-7 .. -1)
     for (let i = preWeeks; i >= 1; i--) {
       boundaries.push(addDaysYMD(startDate, -7 * i));
     }
 
-    // Teaching weeks before break
-    for (let w = 1; w <= breakAfterWeek; w++) {
-      boundaries.push(addDaysYMD(startDate, 7 * (w - 1)));
-    }
-
-    // Break
-    if (breakLengthWeeks > 0) {
-      boundaries.push(addDaysYMD(startDate, 7 * breakAfterWeek));
-    }
-
-    // Remaining teaching weeks
-    for (let w = breakAfterWeek + 1; w <= teachingWeeks; w++) {
-      boundaries.push(addDaysYMD(startDate, 7 * (w - 1 + breakLengthWeeks)));
-    }
-
-    // STUVAC + Exams
-    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks)));
-    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks + 1)));
-    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks + 2)));
-    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks + 3)));
-
-    return boundaries;
-  }
-
-  function currentSydneyYMD() {
-    const parts = new Intl.DateTimeFormat("en-AU", {
-      timeZone: "Australia/Sydney",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    }).formatToParts(new Date());
-    const get = (type) => parts.find(p => p.type === type).value;
-    return `${get("year")}-${get("month")}-${get("day")}`;
-  }
-
-  function sydneyDateString() {
-    return new Intl.DateTimeFormat("en-AU", {
-      timeZone: "Australia/Sydney",
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZoneName: "short"
-    }).format(new Date());
-  }
-
-  function getDayNameSydney() {
-    return new Intl.DateTimeFormat("en-AU", {
-      timeZone: "Australia/Sydney",
-      weekday: "long"
-    }).format(new Date());
-  }
-
-  function getWeekNumber(currentYMD, boundaries) {
-    const k = ymdKey(currentYMD);
-    const first = ymdKey(boundaries[0]);
-    const last = ymdKey(boundaries[boundaries.length - 1]);
-
-    if (k < first) return -1;
-    for (let i = 0; i < boundaries.length - 1; i++) {
-      const a = ymdKey(boundaries[i]);
-      const b = ymdKey(boundaries[i + 1]);
-      if (k >= a && k < b) return i + 1;
-    }
-    if (k >= last) return boundaries.length;
-    return -1;
-  }
-
-  function getWeekLabel(i, dayName, config, boundariesCount) {
-    const { preWeeks, teachingWeeks, breakAfterWeek, breakLengthWeeks } = config;
-
-    if (i < 0) return "The semester hasn't started yet";
-    if (i >= boundariesCount - 1) return "The semester has finished";
-
-    // Pre-semester weeks
-    if (i < preWeeks) {
-      const weeksUntilStart = preWeeks - i;
-      const plural = weeksUntilStart === 1 ? "" : "s";
-      return `The semester commences in ${weeksUntilStart} week${plural}.`;
-    }
-
-    // Teaching weeks before break
-    if (i < preWeeks + breakAfterWeek) {
-      const wk = i - preWeeks + 1;
-      return `It is ${dayName} of Week ${wk}.`;
-    }
-
-    // Break
-    if (breakLengthWeeks > 0 && i === preWeeks + breakAfterWeek) {
-      return `It is ${dayName} of the mid-semester break.`;
-    }
-
-    // Remaining teaching weeks
-    const teachingEndIndex = preWeeks + teachingWeeks + breakLengthWeeks - 1;
-    if (i <= teachingEndIndex) {
-      const wk = i - preWeeks - breakLengthWeeks + 1;
-      return `It is ${dayName} of Week ${wk}.`;
-    }
-
-    // STUVAC and exams
-    if (i === preWeeks + teachingWeeks + breakLengthWeeks) return `It is ${dayName} of STUVAC.`;
-    if (i === preWeeks + teachingWeeks + breakLengthWeeks + 1) return `It is ${dayName} of Exam Week 1.`;
-    if (i === preWeeks + teachingWeeks + breakLengthWeeks + 2) return `It is ${dayName} of Exam Week 2.`;
-
-    return `${dayName}`;
-  }
-
-  // -----------------------------
-  // Auto-detect semester
-  // -----------------------------
-  const currentYMD = currentSydneyYMD();
-  const dayName = getDayNameSydney();
-  const sydneyStamp = sydneyDateString();
-
-  let activeSemester = null;
-  let weekLabel = "";
-  for (const [sem, cfg] of Object.entries(semesterConfigs)) {
-    const boundaries = buildWeekStartDates(cfg);
-    const firstBoundary = boundaries[0];
-    const lastBoundary = boundaries[boundaries.length - 1];
-    if (ymdKey(currentYMD) >= ymdKey(firstBoundary) && ymdKey(currentYMD) <= ymdKey(lastBoundary)) {
-      activeSemester = sem;
-      const weekNumber = getWeekNumber(currentYMD, boundaries);
-      weekLabel = getWeekLabel(weekNumber - 1, dayName, cfg, boundaries.length);
-      document.getElementById("week-display").textContent =
-        `${cfg.name}: ${weekLabel} (${sydneyStamp})`;
-      break;
-    }
-  }
-
-  if (!activeSemester) {
-    document.getElementById("week-display").textContent =
-      `Outside semester dates. (${sydneyStamp})`;
-  }
-</script>
-
-</body>
-</html>
