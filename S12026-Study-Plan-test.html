@@ -1,164 +1,182 @@
+
 <!DOCTYPE html>
 <html>
 <head>
   <title>Semester Week</title>
+  <meta charset="utf-8">
 </head>
 <body>
 
-
-
-  
- 
-  
-
-
-<p style="border: 2px dotted #28426a;
-         padding: 10px;  
-         margin-top: 0px; 
-         margin-bottom: 0px;
-         font-size: 14pt; 
-         color: rgb(45, 59, 69); 
-         text-align: center; 
-         font-family: 'Century Gothic', Calibri, Helvetica, Arial, sans-serif; 
-         overflow: hidden;
-         font-weight: bold;" 
-   id="week-display">
+<p
+  id="week-display"
+  style="
+    border: 2px dotted #28426a;
+    padding: 10px;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 14pt;
+    color: rgb(45, 59, 69);
+    text-align: center;
+    font-family: 'Century Gothic', Calibri, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    font-weight: bold;
+  "
+>
   Where are we in the semester? The semester hasn't started yet.
 </p>
-  
- 
 
-  <script> // [N.B: if you want to change how the box and text looks in terms of styling, do so in the line above]
+<script>
+  // --- Configuration: start of semester (Sydney local date) ---
+  const semesterStartDateStr = "2026-02-23"; // YYYY-MM-DD (no time/offset)
 
-    const semesterStartDate = new Date("2026-02-23T00:00:00+10:00"); // enter the start date of the Semester in AEDT or AEST
+  // --- Week start dates (Sydney local calendar) ---
+  // Ensure STRICTLY ASCENDING order. Use plain dates to avoid offset confusion.
+  const weekStartDatesStr = [
+    "2026-01-05", // Week -7
+    "2026-01-12", // Week -6
+    "2026-01-19", // Week -5
+    "2026-01-26", // Week -4
+    "2026-02-02", // Week -3
+    "2026-02-09", // Week -2
+    "2026-02-16", // Week -1
+    "2026-02-23", // Week 1
+    "2026-03-02", // Week 2
+    "2026-03-09", // Week 3
+    "2026-03-16", // Week 4
+    "2026-03-23", // Week 5
+    "2026-03-30", // Week 6
+    "2026-04-06", // Mid-semester recess (adjust label below if needed)
+    "2026-04-13", // Week 7
+    "2026-04-20", // Week 8
+    "2026-04-27", // Week 9  <-- fixed ordering from your original
+    "2026-05-04", // Week 10
+    "2026-05-11", // Week 11
+    "2026-05-18", // Week 12
+    "2026-05-25", // Week 13
+    "2026-06-01", // STUVAC
+    "2026-06-08", // Exam Week 1
+    "2026-06-15", // Exam Week 2
+    "2026-06-22", // Post-exam / end of semester
+  ];
 
-    const weekStartDates = [
-      new Date("2026-01-5T00:00:00+10:00"), // enter the start date of Week -Seven
-      new Date("2026-01-12T00:00:00+10:00"), // enter the start date of Week -Six
-      new Date("2026-01-19T00:00:00+10:00"), // enter the start date of Week -Five
-      new Date("2026-01-26T00:00:00+10:00"), // enter the start date of Week -Four
-      new Date("2026-02-02T00:00:00+10:00"), // enter the start date of Week -Three
-      new Date("2026-02-09T00:00:00+10:00"), // enter the start date of Week -Two
-      new Date("2026-02-16T00:00:00+10:00"), // enter the start date of Week -One
-      new Date("2026-02-23T00:00:00+10:00"), // enter the start date of Week One
-      new Date("2026-03-02T00:00:00+10:00"), // enter the start date of Week Two
-      new Date("2026-03-09T00:00:00+10:00"), // enter the start date of Week Three
-      new Date("2026-03-16T00:00:00+10:00"), // enter the start date of Week Four
-      new Date("2026-03-23T00:00:00+10:00"), // enter the start date of Week Five
-      new Date("2026-03-30T00:00:00+10:00"), // enter the start date of Week Six
-      new Date("2026-04-06T00:00:00+10:00"), // enter the start date of the Semester Recess [N.B: the Semester Recess and/or AEDT/AEST may be here too]
-      new Date("2026-04-13T00:00:00+10:00"), // enter the start date of Week Seven [N.B: the Semester Recess and/or AEDT/AEST may be here too]
-      new Date("2026-04-20T00:00:00+10:00"), // enter the start date of Week Eight [N.B: the Semester Recess and/or AEDT/AEST may be here too]
-      new Date("2026-05-27T00:00:00+11:00"), // enter the start date of Week Nine [N.B: the Semester Recess and/or AEDT/AEST may be here too]
-      new Date("2026-05-04T00:00:00+11:00"), // enter the start date of Week Ten
-      new Date("2026-05-11T00:00:00+11:00"), // enter the start date of Week Eleven
-      new Date("2026-05-18T00:00:00+11:00"), // enter the start date of Week Twelve
-      new Date("2026-05-25T00:00:00+11:00"), // enter the start date of Week Thirteen
-      new Date("2026-06-01T00:00:00+11:00"), // enter the start date of STUVAC
-      new Date("2026-06-08T00:00:00+11:00"), // enter the start of Week One of the Exam Period
-      new Date("2026-06-15T00:00:00+11:00"), // enter the start of Week Two of the Exam Period
-      new Date("2026-06-22T00:00:00+11:00"), // enter the start of the following week (i.e. end of the Semester)
-    ];
+  // Helper: build a Date object in Sydney time for a local calendar date (YYYY-MM-DD)
+  function dateInSydneyFromYMD(ymd) {
+    // Build using parts to avoid offset ambiguities
+    const [y, m, d] = ymd.split("-").map(Number);
+    // Create a Date for midnight Sydney time by adjusting via UTC baseline
+    // Approach: create a Date as if local, then rely on comparisons done
+    // after normalising to Sydney timezone via parts below.
+    return new Date(y, m - 1, d, 0, 0, 0, 0);
+  }
 
-    const getWeekNumber = (date) => {
-      let weekNumber;
-      const time = date.getTime() - semesterStartDate.getTime();
-      if(date < weekStartDates[0]) weekNumber = -1; 
-      for(let i=0; i<25; i++){
-        if(date >= weekStartDates[i] && date < weekStartDates[i+1]) {
-          weekNumber = i+1;
-        }
-      } 
-      if(date > weekStartDates[24]) weekNumber = 25;
-      return weekNumber;
-    };
+  const semesterStartDate = dateInSydneyFromYMD(semesterStartDateStr);
+  const weekStartDates = weekStartDatesStr.map(dateInSydneyFromYMD);
 
-    const getDayName = (dayNumber) => { // [N.B: in HTML format, the first day in the array is Sunday, but the counter will still name it correctly]
-      switch (dayNumber) {
-        case 0:
-          return "Sunday";
-        case 1:
-          return "Monday";
-        case 2:
-          return "Tuesday";
-        case 3:
-          return "Wednesday";
-        case 4:
-          return "Thursday";
-        case 5:
-          return "Friday";
-        case 6:
-          return "Saturday";
+  // Current date/time in Australia/Sydney—constructed via formatToParts (robust)
+  function nowInSydney() {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-AU", {
+      timeZone: "Australia/Sydney",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    }).formatToParts(now);
+
+    const get = (type) => Number(parts.find(p => p.type === type).value);
+    const year = get("year");
+    const month = get("month");
+    const day = get("day");
+    const hour = get("hour");
+    const minute = get("minute");
+    const second = get("second");
+
+    // Construct a local Date using the parts (interpreted in the environment’s local zone),
+    // which is fine for relative comparisons once all inputs are treated consistently.
+    return new Date(year, month - 1, day, hour, minute, second, 0);
+  }
+
+  function getDayName(dayNumber) {
+    switch (dayNumber) {
+      case 0: return "Sunday";
+      case 1: return "Monday";
+      case 2: return "Tuesday";
+      case 3: return "Wednesday";
+      case 4: return "Thursday";
+      case 5: return "Friday";
+      case 6: return "Saturday";
+      default: return "";
+    }
+  }
+
+  function getWeekNumber(currentDate) {
+    // Before first week-start
+    if (currentDate < weekStartDates[0]) return -1;
+
+    // Find the range [weekStartDates[i], weekStartDates[i+1])
+    for (let i = 0; i < weekStartDates.length - 1; i++) {
+      const start = weekStartDates[i];
+      const next = weekStartDates[i + 1];
+      if (currentDate >= start && currentDate < next) {
+        return i + 1; // 1-based index for your switch mapping
       }
     }
 
-    const getWeekName = (weekNumber) => { 
-      if (weekNumber < 0) {
-        return "The semester hasn't started yet.";
-      } else if (weekNumber >= 25) {
-        return "The semester has finished.";
-      } else {
-      switch (weekNumber) {
-        case 1:
-          return "It is " + dayName + " of Week -7.";
-        case 2:
-          return "It is " + dayName + " of Week -6.";
-        case 3:
-          return "It is " + dayName + " of Week -5.";
-        case 4:
-          return "It is " + dayName + " of Week -4.";
-        case 5:
-          return "It is " + dayName + " of Week -3.";
-        case 6:
-          return "It is " + dayName + " of Week -2.";
-        case 7:
-          return "It is " + dayName + " of Week -1.";
-        case 8:
-          return "It is " + dayName + " of Week 1.";
-        case 9:
-          return "It is " + dayName + " of Week 2.";
-        case 10:
-          return "It is " + dayName + " of Week 3.";
-        case 11:
-          return "It is " + dayName + " of Week 4.";
-        case 12:
-          return "It is " + dayName + " of Week 5.";
-        case 13:
-          return "It is " + dayName + " of Week 6.";
-        case 14:
-          return "It is " + dayName + " of the Mid Semester break."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks  
-        case 15:
-          return "It is " + dayName + " of Week 7."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
-        case 16:
-          return "It is " + dayName + " of Week 8."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
-        case 17:
-          return "It is " + dayName + " of Week 9."; // depending on when the Semester Recess is, you may need to change the text in the quotation marks
-        case 18:
-          return "It is " + dayName + " of Week 10."; 
-        case 19:
-          return "It is " + dayName + " of Week 11."; 
-        case 20:
-          return "It is " + dayName + " of Week 12.";
-        case 21:
-          return "It is " + dayName + " of Week 13.";
-        case 22:
-          return "It is " + dayName + " of STUVAC.";
-        case 23:
-          return "It is " + dayName + " of Week One of the Exam Period.";
-        case 24:
-          return "It is " + dayName + " of Week Two of the Exam Period.";
-        }
-      }
-    };
-    
-    const options = {timeZone: "Australia/Sydney"};
-    const sydneyDate = new Intl.DateTimeFormat("en-US", options).format(new Date());
-    const currentDate = new Date(sydneyDate);
-    const dayNumber = currentDate.getDay();
-    const dayName = getDayName(dayNumber);
-    const weekNumber = getWeekNumber(currentDate);
-    const weekName = getWeekName(weekNumber);
-    document.getElementById("week-display").innerHTML = "It is Semester 1: " + weekName; // [N.B: if you want to change the text preceding the counter, do so here]
-  </script>
+    // On or after the last boundary
+    if (currentDate >= weekStartDates[weekStartDates.length - 1]) {
+      return weekStartDates.length; // e.g., 25
+    }
+
+    return -1; // Fallback (shouldn’t be hit)
+  }
+
+  function getWeekName(weekNumber, dayName) {
+    if (weekNumber < 0) return "The semester hasn't started yet.";
+    if (weekNumber >= weekStartDates.length) return "The semester has finished.";
+
+    switch (weekNumber) {
+      case 1:  return `${dayName} of Week -7`;
+      case 2:  return `${dayName} of Week -6`;
+      case 3:  return `${dayName} of Week -5`;
+      case 4:  return `${dayName} of Week -4`;
+      case 5:  return `${dayName} of Week -3`;
+      case 6:  return `${dayName} of Week -2`;
+      case 7:  return `${dayName} of Week -1`;
+      case 8:  return `${dayName} of Week 1`;
+      case 9:  return `${dayName} of Week 2`;
+      case 10: return `${dayName} of Week 3`;
+      case 11: return `${dayName} of Week 4`;
+      case 12: return `${dayName} of Week 5`;
+      case 13: return `${dayName} of Week 6`;
+      case 14: return `${dayName} of the Mid Semester break`; // adjust text as needed
+      case 15: return `${dayName} of Week 7`;
+      case 16: return `${dayName} of Week 8`;
+      case 17: return `${dayName} of Week 9`;
+      case 18: return `${dayName} of Week 10`;
+      case 19: return `${dayName} of Week 11`;
+      case 20: return `${dayName} of Week 12`;
+      case 21: return `${dayName} of Week 13`;
+      case 22: return `${dayName} of STUVAC`;
+      case 23: return `${dayName} of Exam Week 1`;
+      case 24: return `${dayName} of Exam Week 2`;
+      default: return `${dayName}`; // fallback
+    }
+  }
+
+  // Compute and render
+  const currentDateSydney = nowInSydney();
+  const dayName = getDayName(currentDateSydney.getDay());
+  const weekNumber = getWeekNumber(currentDateSydney);
+  const weekName = getWeekName(weekNumber, dayName);
+
+  // Avoid double "It is"
+  document.getElementById("week-display").textContent =
+    `Semester 1: ${weekName}.`;
+</script>
+
 </body>
 </html>
+``
