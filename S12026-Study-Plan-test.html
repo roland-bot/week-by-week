@@ -74,3 +74,137 @@
       boundaries.push(addDaysYMD(startDate, -7 * i));
     }
 
+    // Teaching weeks before break (1 .. breakAfterWeek)
+    for (let w = 1; w <= breakAfterWeek; w++) {
+      boundaries.push(addDaysYMD(startDate, 7 * (w - 1)));
+    }
+
+    // Mid-semester break
+    if (breakLengthWeeks > 0) {
+      boundaries.push(addDaysYMD(startDate, 7 * breakAfterWeek));
+    }
+
+    // Remaining teaching weeks (breakAfterWeek+1 .. teachingWeeks)
+    for (let w = breakAfterWeek + 1; w <= teachingWeeks; w++) {
+      boundaries.push(addDaysYMD(startDate, 7 * (w - 1 + breakLengthWeeks)));
+    }
+
+    // STUVAC + Exam Week 1 + Exam Week 2 + End boundary
+    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks)));
+    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks + 1)));
+    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks + 2)));
+    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks + 3)));
+
+    return boundaries;
+  }
+
+  function currentSydneyYMD() {
+    const parts = new Intl.DateTimeFormat("en-AU", {
+      timeZone: "Australia/Sydney",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(new Date());
+    const get = (type) => parts.find(p => p.type === type).value;
+    return `${get("year")}-${get("month")}-${get("day")}`;
+  }
+
+  function getDayNameSydney() {
+    return new Intl.DateTimeFormat("en-AU", {
+      timeZone: "Australia/Sydney",
+      weekday: "long"
+    }).format(new Date());
+  }
+
+  function getWeekNumber(currentYMD, boundaries) {
+    const k = ymdKey(currentYMD);
+    const first = ymdKey(boundaries[0]);
+    const last = ymdKey(boundaries[boundaries.length - 1]);
+
+    if (k < first) return -1;
+    for (let i = 0; i < boundaries.length - 1; i++) {
+      const a = ymdKey(boundaries[i]);
+      const b = ymdKey(boundaries[i + 1]);
+      if (k >= a && k < b) return i + 1; // 1-based
+    }
+    if (k >= last) return boundaries.length; // finished
+    return -1;
+  }
+
+  // Returns { text: string, isPreMessage: boolean }
+  function getWeekLabel(i, dayName, config, boundariesCount) {
+    const { preWeeks, teachingWeeks, breakAfterWeek, breakLengthWeeks, name } = config;
+
+    if (i < 0) {
+      return { text: "The semester hasn't started yet", isPreMessage: false };
+    }
+    if (i >= boundariesCount - 1) {
+      return { text: "The semester has finished", isPreMessage: false };
+    }
+
+    // Pre-semester weeks: "Semester X commences in x weeks."
+    if (i < preWeeks) {
+      const weeksUntilStart = preWeeks - i; // 7..1
+      const plural = weeksUntilStart === 1 ? "" : "s";
+      return { text: `${name} commences in ${weeksUntilStart} week${plural}.`, isPreMessage: true };
+    }
+
+    // Teaching weeks before break
+    if (i < preWeeks + breakAfterWeek) {
+      const wk = i - preWeeks + 1;
+      return { text: `It is ${dayName} of Week ${wk}.`, isPreMessage: false };
+    }
+
+    // Mid-semester break
+    if (breakLengthWeeks > 0 && i === preWeeks + breakAfterWeek) {
+      return { text: `It is ${dayName} of the mid-semester break.`, isPreMessage: false };
+    }
+
+    // Remaining teaching weeks
+    const teachingEndIndex = preWeeks + teachingWeeks + breakLengthWeeks - 1;
+    if (i <= teachingEndIndex) {
+      const wk = i - preWeeks - breakLengthWeeks + 1;
+      return { text: `It is ${dayName} of Week ${wk}.`, isPreMessage: false };
+    }
+
+    // STUVAC and exams
+    if (i === preWeeks + teachingWeeks + breakLengthWeeks)     return { text: `It is ${dayName} of STUVAC.`, isPreMessage: false };
+    if (i === preWeeks + teachingWeeks + breakLengthWeeks + 1) return { text: `It is ${dayName} of Exam Week 1.`, isPreMessage: false };
+    if (i === preWeeks + teachingWeeks + breakLengthWeeks + 2) return { text: `It is ${dayName} of Exam Week 2.`, isPreMessage: false };
+
+    return { text: `${dayName}`, isPreMessage: false };
+  }
+
+  // -----------------------------
+  // Auto-detect semester & render
+  // -----------------------------
+  const currentYMD = currentSydneyYMD();
+  const dayName = getDayNameSydney();
+
+  let rendered = false;
+  for (const cfg of Object.values(semesterConfigs)) {
+    const boundaries = buildWeekStartDates(cfg);
+    const firstBoundary = boundaries[0];
+    const lastBoundary = boundaries[boundaries.length - 1];
+
+    if (ymdKey(currentYMD) >= ymdKey(firstBoundary) && ymdKey(currentYMD) <= ymdKey(lastBoundary)) {
+      const weekNumber = getWeekNumber(currentYMD, boundaries);
+      const { text, isPreMessage } = getWeekLabel(weekNumber - 1, dayName, cfg, boundaries.length);
+
+      // If it's a pre-weeks message, show "Semester X commences in x weeks."
+      // Otherwise, prefix with "Semester X: ..."
+      const finalText = isPreMessage ? text : `${cfg.name}: ${text}`;
+
+      document.getElementById("week-display").textContent = finalText;
+      rendered = true;
+      break;
+    }
+  }
+
+  if (!rendered) {
+    document.getElementById("week-display").textContent = "Outside semester dates.";
+  }
+</script>
+
+</body>
+</html>
