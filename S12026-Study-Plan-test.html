@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Semester Week</title>
+  <meta charset="utf-8">
+</head>
+<body>
+
+<p
+  id="week-display"
+  style="
+    border: 2px dotted #28426a;
+    padding: 10px;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 14pt;
+    color: rgb(45, 59, 69);
+    text-align: center;
+    font-family: 'Century Gothic', Calibri, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    font-weight: bold;
+  "
+>
+  Where are we in the semester? The semester hasn't started yet.
+</p>
+
+<script>
+  // -----------------------------
+  // Configuration
+  // -----------------------------
+  const ACTIVE_SEMESTER = 2; // Set 1 for Semester 1, 2 for Semester 2
+
+  const semesterConfigs = {
+    1: {
+      name: "Semester 1",
+      startDate: "2026-02-23",   // YYYY-MM-DD — update to your official start
+      teachingWeeks: 13,
+      breakAfterWeek: 6,         // mid-semester break after Week 6
+      breakLengthWeeks: 1,       // length of break in weeks (0 or 1)
+      preWeeks: 7,               // Weeks -7 to -1
+      stuvacWeeks: 1,
+      examWeeks: 2
+    },
+    2: {
+      name: "Semester 2",
+      startDate: "2026-07-27",   // YYYY-MM-DD — update to your official start date
+      teachingWeeks: 13,
+      breakAfterWeek: 6,
+      breakLengthWeeks: 1,
+      preWeeks: 7,
+      stuvacWeeks: 1,
+      examWeeks: 2
+    }
+  };
+
+  // -----------------------------
+  // Date utilities (DST-safe)
+  // -----------------------------
+
+  // Add days to a YYYY-MM-DD string in UTC to avoid DST/local ambiguities
+  function addDaysYMD(ymd, days) {
+    const [y, m, d] = ymd.split("-").map(Number);
+    const utcMs = Date.UTC(y, m - 1, d);
+    const next = new Date(utcMs + days * 86400000);
+    const yy = next.getUTCFullYear();
+    const mm = String(next.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(next.getUTCDate()).padStart(2, "0");
+    return `${yy}-${mm}-${dd}`;
+  }
+
+  // Convert YYYY-MM-DD to a numeric key for easy comparisons (ymd -> yyyymmdd)
+  function ymdKey(ymd) {
+    return Number(ymd.replaceAll("-", ""));
+  }
+
+  // Build the full sequence of week start boundaries for a semester
+  // Returns an array of YYYY-MM-DD strings including:
+  //   pre-weeks (-7..-1), teaching weeks (1..13), optional break, STUVAC, Exam 1, Exam 2, and final boundary
+  function buildWeekStartDates(config) {
+    const {
+      startDate, teachingWeeks, breakAfterWeek, breakLengthWeeks,
+      preWeeks, stuvacWeeks, examWeeks
+    } = config;
+
+    const boundaries = [];
+
+    // Pre-weeks: -7 .. -1 (7 weeks before the start)
+    for (let i = preWeeks; i >= 1; i--) {
+      boundaries.push(addDaysYMD(startDate, -7 * i));
+    }
+
+    // Weeks 1 .. breakAfterWeek
+    for (let w = 1; w <= breakAfterWeek; w++) {
+      boundaries.push(addDaysYMD(startDate, 7 * (w - 1)));
+    }
+
+    // Mid-semester break (if any)
+    if (breakLengthWeeks > 0) {
+      boundaries.push(addDaysYMD(startDate, 7 * breakAfterWeek));
+    }
+
+    // Weeks (breakAfterWeek+1) .. teachingWeeks
+    const afterBreakStartOffsetWeeks = breakAfterWeek + breakLengthWeeks;
+    for (let w = breakAfterWeek + 1; w <= teachingWeeks; w++) {
+      boundaries.push(addDaysYMD(startDate, 7 * (w - 1 + breakLengthWeeks)));
+    }
+
+    // STUVAC
+    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks)));
+
+    // Exam Week 1
+    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks + 1)));
+
+    // Exam Week 2
+    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks + 2)));
+
+    // End-of-semester (final boundary for "finished")
+    boundaries.push(addDaysYMD(startDate, 7 * (teachingWeeks + breakLengthWeeks + 3)));
+
+    return boundaries;
+  }
+
+  // Current date/time in Australia/Sydney (for display)
+  function sydneyDateString() {
+    return new Intl.DateTimeFormat("en-AU", {
+      timeZone: "Australia/Sydney",
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZoneName: "short" // e.g., GMT+11 (AEDT)
+    }).format(new Date());
+  }
+
+  // Also need current Sydney date parts for week calculation (compare by YMD)
+  function currentSydneyYMD() {
+    const parts = new Intl.DateTimeFormat("en-AU", {
+      timeZone: "Australia/Sydney",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(new Date());
+    const get = (type) => parts.find(p => p.type === type).value;
+    const y = get("year");
+    const m = get("month");
+    const d = get("day");
+    return `${y}-${m}-${d}`; // YYYY-MM-DD
+  }
+
+  function getDayNameSydney() {
+    const parts = new Intl.DateTimeFormat("en-AU", {
+      timeZone: "Australia/Sydney",
+      weekday: "long"
+    }).formatToParts(new Date());
+    const name = parts.find(p => p.type === "weekday").value;
+    return name; // e.g., "Thursday"
+  }
+
+  // Determine the week number from boundaries (1-based, with -1 for "not started", and >= length for "finished")
+  function getWeekNumberFromBoundaries(currentYMD, boundaries) {
+    const k = ymdKey(currentYMD);
+    const first = ymdKey(boundaries[0]);
+    const last = ymdKey(boundaries[boundaries.length - 1]);
+
+    if (k < first) return -1;
+
+    for (let i = 0; i < boundaries.length - 1; i++) {
+      const a = ymdKey(boundaries[i]);
+      const b = ymdKey(boundaries[i + 1]);
+      if (k >= a && k < b) {
+        return i + 1; // 1-based
+      }
+    }
+
+    if (k >= last) return boundaries.length; // finished
+    return -1;
+  }
+
+  // Compute label for a given index (i = weekNumber - 1)
+  function getWeekLabel(i, dayName, config, boundariesCount) {
+    const { preWeeks, teachingWeeks, breakAfterWeek, breakLengthWeeks } = config;
+
+    if (i < 0) return "The semester hasn't started yet";
+    if (i >= boundariesCount - 1) return "The semester has finished";
+
+    // Pre-weeks: index 0 .. preWeeks-1
+    if (i < preWeeks) {
+      const neg = preWeeks - i; // 7..1
+      return `${dayName} of Week -${neg}`;
+    }
+
+    // Weeks before break: indices preWeeks .. preWeeks+breakAfterWeek-1
+    if (i < preWeeks + breakAfterWeek) {
+      const wk = i - preWeeks + 1;
+      return `${dayName} of Week ${wk}`;
+    }
+
+    // Break week (if present)
+    if (breakLengthWeeks > 0 && i === preWeeks + breakAfterWeek) {
+      return `${dayName} of the Mid-semester break`;
+    }
+
+    // Weeks after break: indices preWeeks + breakAfterWeek + breakLengthWeeks .. preWeeks + teachingWeeks + breakLengthWeeks - 1
+    const teachingEndIndex = preWeeks + teachingWeeks + breakLengthWeeks - 1;
+    if (i <= teachingEndIndex) {
+      const taughtWeeksSoFar = i - preWeeks - breakLengthWeeks; // 0-based within the teaching schedule
+      const wk = taughtWeeksSoFar + 1;
+      return `${dayName} of Week ${wk}`;
+    }
+
+    // STUVAC
+    if (i === preWeeks + teachingWeeks + breakLengthWeeks) {
+      return `${dayName} of STUVAC`;
+    }
+
+    // Exam Week 1
+    if (i === preWeeks + teachingWeeks + breakLengthWeeks + 1) {
+      return `${dayName} of Exam Week 1`;
+    }
+
+    // Exam Week 2
+    if (i === preWeeks + teachingWeeks + breakLengthWeeks + 2) {
+      return `${dayName} of Exam Week 2`;
+    }
+
+    // Post-exam boundary (should not normally display as a label)
+    return `${dayName}`;
+  }
+
+  // -----------------------------
+  // Run
+  // -----------------------------
+  const cfg = semesterConfigs[ACTIVE_SEMESTER];
+  const boundaries = buildWeekStartDates(cfg);
+  const currentYMD = currentSydneyYMD();
+  const weekNumber = getWeekNumberFromBoundaries(currentYMD, boundaries);
+  const dayName = getDayNameSydney();
+  const weekLabel = getWeekLabel(weekNumber - 1, dayName, cfg, boundaries.length);
+  const sydneyStamp = sydneyDateString();
+
+  // Render (Australian English phrasing)
+  const prefix = `${cfg.name}:`;
+  document.getElementById("week-display").textContent =
+    `${prefix} ${weekLabel}. (${sydneyStamp})`;
+</script>
+
+</body>
+</html>
